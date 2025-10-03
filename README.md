@@ -19,14 +19,14 @@ examples:
   delve crawl-path https://example.com/docs 3
 ```
 
-#### publishing local files to confluence
+#### publishing local files
 
 ```
 template:
-  delve confluence-publish <host> <folder> <space_id/parent_page_id>
+  delve publish <host> <folder> <space_id/parent_page_id>
 
 examples:
-  delve confluence-publish https://wiki.confluence.com example/docs public/docs
+  delve publish https://wiki.confluence.com example/docs public/docs
                            ^confluence host            ^local folder of mardown files
                                                                     ^confluence space
                                                                            ^confluence parent page

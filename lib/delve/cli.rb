@@ -3,6 +3,7 @@ require_relative 'crawlers/spider'
 require_relative 'crawlers/spider_domain'
 require_relative 'crawlers/spider_path'
 require_relative 'confluence/publisher'
+require_relative 'publisher'
 
 module Delve
   class CLI < Thor
@@ -37,9 +38,9 @@ module Delve
       crawler.crawl
     end
 
-    desc "confluence-publish <host> <directory> <root_page_id>", "publish a directory of markdown to confluence"
-    def confluence_publish(host, directory, root_page_id)
-      publisher = Delve::Confluence::Publisher.new(host, directory, root_page_id)
+    desc "publish <host> <local folder> <parent page id>", "publish a local folder of markdown to a supported destination"
+    def publish(host, directory, root_page_id)
+      publisher = Delve::Publisher.new(host, directory, root_page_id)
       publisher.publish
     end
   end
