@@ -26,10 +26,10 @@ examples:
 
 ## tech stack
 
-- **language:** ruby
+- **language:** `ruby`
 - **http client:** `faraday`
 - **html parsing & cleaning:** `nokogiri`
-- **content extraction:** the `readability` gem
+- **content extraction:** `ruby-readability` gem
 - **html-to-markdown conversion:** `reverse_markdown`
 - **cli framework:** `thor`
 
