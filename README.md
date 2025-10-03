@@ -33,7 +33,7 @@ examples:
 ```
 
 * `crawl`: starts at the specified `resource` and crawls outward in all
-  directions.
+directions.
 * `crawl-domain`: same engine, applies a domain filter (effective domain match).
 * `crawl-path`: same engine, applies a path prefix filter based on the start url.
 
@@ -56,12 +56,19 @@ delve/
 └── lib/
     └── delve
         ├── cli.rb                  # the main program, effectively
+        ├── spider.rb               # unified crawler with filter modes
         ├── saver.rb
+        ├── fetcher.rb              # dispatcher: decides html vs confluence
+        ├── publisher.rb            # dispatcher: decides confluence vs noop
+        ├── config.rb               # centralized config loader/helpers
+        ├── confluence/
+        │   ├── client.rb
+        │   ├── fetcher.rb
+        │   ├── markdown_converter.rb
+        │   └── publisher.rb
         ├── html/                   # html processing tools
         │   ├── fetcher.rb
         │   └── cleaner.rb
-        └── crawlers/               # content crawlers
-            └── spider.rb
 ```
 
 ## for developers
@@ -72,7 +79,7 @@ extensible. the main components interact in the following sequence:
 ```ascii
  [ cli ]
     |
-    `--> [ crawler ] (spider w/ filter)
+    `--> [ spider ] (with filter)
            |
            | (for each url)
            v
@@ -90,8 +97,8 @@ extensible. the main components interact in the following sequence:
 ```
 
 - **cli:** the entry point. it parses user arguments and instantiates the
-  correct crawler.
-- **crawler:** manages the queue of urls to visit and orchestrates the fetching,
+  spider with the appropriate filter.
+- **spider:** manages the queue of urls to visit and orchestrates the fetching,
   cleaning, and saving process for each url.
 - **fetcher (dispatcher):** this is the brain of the content retrieval. based on
   the url's host and the `delve.yml` config, it decides whether to use the
@@ -99,3 +106,5 @@ extensible. the main components interact in the following sequence:
   confluence sites.
 - **cleaner/saver:** the `Html::Cleaner` processes the fetched html, and the
   `Saver` writes the final markdown to disk.
+- **publisher:** dispatches publishing to confluence (if configured) or no-ops.
+- **config:** central place for loading and querying configuration.
