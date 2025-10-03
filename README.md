@@ -42,12 +42,12 @@ soak/
 │   └── soak
 └── lib/
     └── soak
-        ├── cli.rb
+        ├── cli.rb                  # the main program, effectively
         ├── saver.rb
-        ├── html/
+        ├── html/                   # html processing tools
         │   ├── fetcher.rb
         │   └── cleaner.rb
-        └── crawlers/
+        └── crawlers/               # content crawlers
             ├── spider.rb
             ├── spider_domain.rb
             └── spider_path.rb
