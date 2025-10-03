@@ -65,7 +65,7 @@ extensible. the main components interact in the following sequence:
            |
            | (for each url)
            v
-         [ fetcher (dispatcher) ] --(is it confluence?)--> [ confluence::fetcher ]
+         [ fetcher (dispatcher) ] --(is it confluence?)--> [ Confluence::Fetcher ]
            |                                                     |
            | (default)                                           |
            v                                                     |
