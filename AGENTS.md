@@ -8,8 +8,8 @@ guidelines.
 
 - all documentation will be kept in the `docs/` directory.
 - downloaded content will be stored in the `content/` directory.
-- text should be written in lower-case (except code blocks, with should remain
-  valid code)
+- text should be written in lower-case, except for proper nouns (e.g., ruby,
+  nokogiri).
 - lines should be wrapped at 80 characters.
 - exceptions to the 80-character limit are permitted for hyperlinks, tables,
   and code blocks where breaking lines would be impractical.
