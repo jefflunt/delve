@@ -2,6 +2,7 @@ require 'thor'
 require_relative 'crawlers/spider'
 require_relative 'crawlers/spider_domain'
 require_relative 'crawlers/spider_path'
+require_relative 'confluence/publisher'
 
 module Soak
   class CLI < Thor
@@ -34,6 +35,12 @@ module Soak
     def crawl_path(url, depth = 2)
       crawler = Soak::Crawlers::SpiderPath.new(url, depth.to_i)
       crawler.crawl
+    end
+
+    desc "confluence-publish <host or alias> <document folder> <root page id>", "publish a directory of markdown to confluence"
+    def confluence_publish(host, directory, root_page_id)
+      publisher = Soak::Confluence::Publisher.new(host, directory, root_page_id)
+      publisher.publish
     end
   end
 end

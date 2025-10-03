@@ -15,6 +15,58 @@ module Soak
         JSON.parse(response.body) if response.success?
       end
 
+      def post(path, body)
+        response = connection.post(path) do |req|
+          req.headers['Content-Type'] = 'application/json'
+          req.body = body.to_json
+        end
+        JSON.parse(response.body) if response.success?
+      end
+
+      def put(path, body)
+        response = connection.put(path) do |req|
+          req.headers['Content-Type'] = 'application/json'
+          req.body = body.to_json
+        end
+        JSON.parse(response.body) if response.success?
+      end
+
+      def find_page_by_title(title, parent_id)
+        # Confluence API doesn't let you search by parent AND title in one go,
+        # so we get all children and filter manually.
+        children = get("/wiki/rest/api/content/#{parent_id}/child/page")
+        children['results'].find { |p| p['title'] == title } if children && children['results']
+      end
+
+      def create_page(title, content, parent_id, space_key)
+        post('/wiki/rest/api/content', {
+          type: 'page',
+          title: title,
+          ancestors: [{ id: parent_id }],
+          space: { key: space_key },
+          body: {
+            storage: {
+              value: content,
+              representation: 'storage'
+            }
+          }
+        })
+      end
+
+      def update_page(page_id, title, content, new_version)
+        put("/wiki/rest/api/content/#{page_id}", {
+          type: 'page',
+          title: title,
+          version: { number: new_version },
+          body: {
+            storage: {
+              value: content,
+              representation: 'storage'
+            }
+          }
+        })
+      end
+
       private
 
       def connection

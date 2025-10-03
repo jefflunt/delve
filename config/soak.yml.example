@@ -9,3 +9,4 @@ confluence:
   "your-instance.atlassian.net":
     username: "your-email@example.com"
     api_token: "your-confluence-api-token"
+    space_key: "YOUR_SPACE_KEY"
