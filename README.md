@@ -7,14 +7,28 @@ focus on converting content to markdown to make it easily ingestible by llms.
 
 ### usage
 
+ingesting information, crawling a website.
+
 ```
 template:
-  delve <mode> <resource> [depth]
+  delve <subcmd> <resource> [depth]
 
 examples:
   delve crawl https://example.com 3
   delve crawl-domain https://example.com 3
   delve crawl-path https://example.com/docs 3
+```
+
+publishing local files to confluence
+```
+template:
+  delve confluence-publish <host> <folder> <space_id/parent_page_id>
+
+examples:
+  delve confluence-publish https://wiki.confluence.com example/docs public/docs
+                           ^confluence host            ^local folder of mardown files
+                                                                    ^confluence space
+                                                                           ^confluence parent page
 ```
 
 * `crawl`: starts at the specified `resource` and crawls outward in all
