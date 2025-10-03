@@ -1,91 +1,103 @@
-# soak design 
+# `soak` design document
 
-## 1. Overview
+## overview
 
-The goal is to build a command-line tool for scraping web pages, cleaning their content, and saving them as Markdown. The tool will support two main modes: a "spider" mode to crawl a site to a specified depth, and a "wiki" mode to download a structured hierarchy of pages.
+a command-line tool for scaping the web, with a focus on converting content to
+markdown to make it easily ingestible by llms.
 
-## 2. Technology Stack (Ruby)
+there are two main modes:
 
-This project is well-suited for Ruby, leveraging its strong ecosystem of libraries for web scraping and CLI development.
+1. `spider`: to crawl from a URL outwards
+2. `diver`: to download a hierarchical set of pages, such as those often found in
+   a wiki
 
-- **HTTP Client:** `Faraday` for its flexible, middleware-based approach to making HTTP requests.
-- **HTML Parsing & Cleaning:** `Nokogiri` for its speed and power in parsing and manipulating HTML documents.
-- **Content Extraction:** A Ruby port of Mozilla's `Readability` library (e.g., the `readability` gem) for automatically identifying and extracting the primary content of a page.
-- **HTML-to-Markdown Conversion:** `reverse_markdown` for a straightforward conversion of the cleaned HTML into Markdown.
-- **CLI Framework:** `Thor` for building a robust and user-friendly command-line interface.
-- **Concurrency:** `concurrent-ruby` to manage a thread pool for efficiently downloading multiple pages at once.
+## tech stack
 
-## 3. Proposed Architecture
+- **language:** ruby
+- **http client:** `faraday`
+- **html parsing & cleaning:** `nokogiri`
+- **content extraction:** the `readability` gem for automatically identifying
+  and extracting the primary content of a page
+- **html-to-markdown conversion:** `reverse_markdown` for a conversion of the
+  cleaned HTML into Markdown.
+- **cli framework:** `thor`
+- **concurrency:** plain old ruby `Thread`, since the project will be heavily
+  i/o bound
 
-The application can be broken down into several distinct components, each with a clear responsibility.
+## main components
 
-#### a. `CLI` (The User Interface)
+### `cli` (the user interface)
 
-- **Responsibility:** Parse command-line arguments and orchestrate the other components.
-- **Implementation:** Use `Thor` to define commands.
-  - `scraper crawl <url> --depth <N>`: The main command for spidering. It will kick off the crawling process starting at the given URL.
-  - `scraper wiki <url> --next-selector <css_selector>`: The command for downloading a sequence of pages, like a wiki. The user provides a CSS selector that points to the "Next Page" link.
-- **Options:**
-  - `--output-dir`: Specify where to save Markdown files.
-  - `--content-selector`: An optional CSS selector to manually specify the main content area, overriding automatic detection.
-  - `--concurrency`: Number of parallel download threads.
+- **responsibility:** parse command-line arguments and orchestrate the other components
+- **implementation:** use `thor` to define commands
+  - `soak <url> <n>`: the main command for spidering from a url outwards by
+    `n` levels (default to 2 levels)
 
-#### b. `Downloader` (The Fetcher)
+### `fetcher` (the raw content reader)
 
-- **Responsibility:** Fetch the raw HTML from a URL.
-- **Implementation:** A class that uses `Faraday` to handle HTTP GET requests. It should be configured to handle redirects, set a user-agent, and manage basic error handling (e.g., logging a warning for 4xx/5xx responses). It will be executed within a thread pool managed by `concurrent-ruby`.
+- **responsibility:** fetch the raw html from a url.
+- **implementation:** a class that uses `faraday` to handle http get requests.
+  it should be configured to handle redirects, set a user-agent, and manage
+  basic error handling (e.g., logging a warning for 4xx/5xx responses). it will
+  be executed within a thread pool managed by `concurrent-ruby`.
 
-#### c. `Processor` (The Brains)
+### `cleaner` (the brains)
 
-- **Responsibility:** Take raw HTML, parse it, clean it, extract content and links, and convert it to Markdown.
-- **Implementation:** This is the core logic.
-  1.  **Parse:** Use `Nokogiri` to turn the raw HTML string into a traversable document object.
-  2.  **Extract Content:**
-      - **Automatic (Default):** Use the `readability` gem to find the main article body. This is highly effective for articles and blog posts, as it strips out navigation, sidebars, and ads.
-      - **Manual (Override):** If the user provides a `--content-selector`, use that `Nokogiri` selector to grab a specific part of the page. This is more reliable for sites with non-standard layouts.
-  3.  **Extract Links (for `crawl` mode):** From the *original, uncleaned* Nokogiri document, extract all `href` attributes from `<a>` tags. Filter these to get absolute URLs that are on the same domain as the source URL.
-  4.  **Convert to Markdown:** Pass the cleaned HTML snippet from step 2 to `reverse_markdown` to get the final output.
+- **responsibility:** take raw html, parse it, clean it, extract content and
+  links, and present just the main content
+- **implementation:** this is the core logic.
+  1.  **parse:** use `nokogiri` to turn the raw html string into a traversable
+      document object.
+  2.  **extract content:** use the `readability` gem to find the main article
+      body. this is highly effective for articles and blog posts, as it strips
+      out navigation, sidebars, and ads.
+  3.  **extract links for crawling outbound links:** from the *original,
+      uncleaned* nokogiri document, extract all `href` attributes from `<a>`
+      tags. filter these to get absolute urls that are on the same domain as the
+      source url.
+  4.  **convert to markdown:** pass the cleaned html snippet from step 2 to
+      `reverse_markdown` to get the final output.
 
-#### d. `Crawler` (The Spider)
+### `crawler` (the spider)
 
-- **Responsibility:** Manage the queue of URLs to visit and orchestrate the downloading and processing workflow.
-- **Implementation:**
-  - Maintain a `Queue` of URLs to be processed and a `Set` of URLs that have already been visited to avoid infinite loops.
-  - Start with the initial URL. For each URL:
-    1.  Pop a URL from the queue.
-    2.  Dispatch a `Downloader` job to the thread pool.
-    3.  Once downloaded, the `Processor` extracts the content (which is saved) and new links.
-    4.  Add the new, unvisited links to the queue, respecting the `--depth` limit.
+- **responsibility:** manage the queue of urls to visit and orchestrate the
+  downloading and processing workflow.
+- **implementation:**
+  - maintain a `queue` of urls to be processed and a `set` of urls that have
+    already been visited to avoid infinite loops.
+  - start with the initial url. for each url:
+    1.  pop a url from the queue.
+    2.  dispatch a `downloader` job to the thread pool.
+    3.  once downloaded, the `cleaner` extracts and saves the content.
+    4.  add the new, unvisited links to the queue
 
-#### e. `Storage` (The Writer)
+### `saver` (saves the content to the file system)
 
-- **Responsibility:** Save the processed Markdown content to the filesystem.
-- **Implementation:** A simple class that takes Markdown content and a source URL. It will generate a clean filename from the URL (e.g., `https://example.com/foo/bar` -> `foo-bar.md`) and save it in the specified output directory.
+- **responsibility:** save the processed markdown content to the filesystem.
+- **implementation:** a simple class that takes markdown content and a source
+  url. it will generate a clean filename from the url (e.g.,
+  `https://example.com/foo/bar` -> `foo-bar.md`) and save it in the specified
+  output directory. heirarchies of pages (based on their relative path) will be
+  stored in child folders, and related links (i.e. that change relative paths,
+  or jump to other domains/subdomains) are stored in a `related/` folder with a
+  logic structure of their own.
 
-## 4. Project Structure
+## 4. project structure
 
-A standard Ruby gem structure would be appropriate:
+a standard ruby gem structure would be appropriate:
 
 ```
-web-scraper/
+soak/
 ├── bin/
-│   └── scraper         # Executable CLI script
+│   └── soak            # executable cli script
 ├── lib/
-│   ├── scraper/
+│   ├── soak/
 │   │   ├── cli.rb
 │   │   ├── crawler.rb
-│   │   ├── downloader.rb
-│   │   ├── processor.rb
+│   │   ├── fetcher.rb
+│   │   ├── cleaner.rb
 │   │   └── storage.rb
-│   └── scraper.rb      # Main module file
+│   └── soak.rb         # main module file
 ├── Gemfile
 └── Gemfile.lock
 ```
-
-## 5. Next Steps
-
-1.  **Setup:** Initialize the project structure and `Gemfile` with the necessary gems.
-2.  **Core Logic:** Start by implementing the `Downloader` and `Processor`. Test them with a single, hardcoded URL to ensure the content extraction and Markdown conversion work as expected.
-3.  **CLI:** Build the `Thor`-based CLI to accept a URL and pass it to the core logic.
-4.  **Crawler:** Implement the crawling logic with the URL queue, visited set, and depth limiting.
-5.  **Concurrency:** Integrate `concurrent-ruby` to parallelize the download tasks.
