@@ -1,7 +1,6 @@
 require 'thor'
 require_relative 'crawlers/spider'
-require_relative 'crawlers/spider_domain'
-require_relative 'crawlers/spider_path'
+
 require_relative 'confluence/publisher'
 require_relative 'publisher'
 
@@ -22,19 +21,19 @@ module Delve
 
     desc "crawl <url> [depth]", "crawl a url in all directions"
     def crawl(url, depth = 2)
-      crawler = Delve::Crawlers::Spider.new(url, depth.to_i)
+      crawler = Delve::Crawlers::Spider.new(url, depth.to_i, :all)
       crawler.crawl
     end
 
     desc "crawl-domain <url> [depth]", "crawl a url within its domain"
     def crawl_domain(url, depth = 2)
-      crawler = Delve::Crawlers::SpiderDomain.new(url, depth.to_i)
+      crawler = Delve::Crawlers::Spider.new(url, depth.to_i, :domain)
       crawler.crawl
     end
 
     desc "crawl-path <url> [depth]", "crawl a url within its path"
     def crawl_path(url, depth = 2)
-      crawler = Delve::Crawlers::SpiderPath.new(url, depth.to_i)
+      crawler = Delve::Crawlers::Spider.new(url, depth.to_i, :path)
       crawler.crawl
     end
 
