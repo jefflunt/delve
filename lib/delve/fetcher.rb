@@ -5,11 +5,11 @@ require_relative 'config'
 module Delve
   class Fetcher
     def self.fetch(url)
-      config = Delve::Config.load
+       config = Delve::Config.confluence_config
       uri = URI.parse(url)
 
-      if config['confluence'] && config['confluence'][uri.host]
-        confluence_fetcher = Confluence::Fetcher.new(url, config['confluence'])
+      if config[uri.host]
+        confluence_fetcher = Confluence::Fetcher.new(url, Delve::Config.confluence_config)
         confluence_fetcher.content_and_links
       else
         html = Html::Fetcher.fetch(url)

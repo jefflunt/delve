@@ -27,9 +27,9 @@ template:
 
 examples:
   delve publish https://wiki.confluence.com example/docs public/docs
-                           ^confluence host            ^local folder of mardown files
-                                                                    ^confluence space
-                                                                           ^confluence parent page
+                ^confluence host            ^local folder of mardown files
+                                                         ^confluence space
+                                                                ^confluence parent page
 ```
 
 * `crawl`: starts at the specified `resource` and crawls outward in all

@@ -13,5 +13,13 @@ module Delve
       @config = nil
       load
     end
+
+    def self.confluence_config
+      load['confluence'] || {}
+    end
+
+    def self.confluence_host(host)
+      confluence_config[host]
+    end
   end
 end

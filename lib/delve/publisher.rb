@@ -7,7 +7,7 @@ module Delve
       @host = host
       @directory = directory
       @root_page_id = root_page_id
-      @config = Delve::Config.load
+       @config = Delve::Config.confluence_config
     end
 
     def publish
@@ -20,11 +20,11 @@ module Delve
     end
 
     def _confluence_host?
-      @config['confluence'] && @config['confluence'][@host]
+      Delve::Config.confluence_host(@host)
     end
 
     def _load_config
       Delve::Config.load
-    end
+    end # retained for compatibility; may remove later
   end
 end

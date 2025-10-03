@@ -50,8 +50,7 @@ module Delve
       end
 
       def _config_for_host
-        config = Delve::Config.load
-        (config['confluence'] && config['confluence'][@host]) || {}
+        Delve::Config.confluence_host(@host) || {}
       end
     end
   end
