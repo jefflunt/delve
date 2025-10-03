@@ -1,6 +1,7 @@
 require 'thor'
 require_relative 'crawlers/spider'
 require_relative 'crawlers/spider_domain'
+require_relative 'crawlers/spider_path'
 
 module Soak
   class CLI < Thor
@@ -26,6 +27,12 @@ module Soak
     desc "crawl-domain <url> [depth]", "crawl a url within its domain"
     def crawl_domain(url, depth = 2)
       crawler = Soak::Crawlers::SpiderDomain.new(url, depth.to_i)
+      crawler.crawl
+    end
+
+    desc "crawl-path <url> [depth]", "crawl a url within its path"
+    def crawl_path(url, depth = 2)
+      crawler = Soak::Crawlers::SpiderPath.new(url, depth.to_i)
       crawler.crawl
     end
   end
