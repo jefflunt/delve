@@ -108,3 +108,48 @@ extensible. the main components interact in the following sequence:
   `Saver` writes the final markdown to disk.
 - **publisher:** dispatches publishing to confluence (if configured) or no-ops.
 - **config:** central place for loading and querying configuration.
+
+## configuration
+
+`delve` looks for an optional file at `config/delve.yml`. this file is not
+required for generic html crawling, but is needed for features like publishing
+and confluence-specific fetching.
+
+`config/delve.yml` is intentionally minimal. an example is provided at
+`config/delve.yml.example`:
+
+```yaml
+confluence:
+  "your-instance.atlassian.net":
+    username: "your-email@example.com"
+    api_token: "your-confluence-api-token"
+    space_key: "YOUR_SPACE_KEY"
+```
+
+### fields
+
+- `confluence`: a mapping of confluence hostnames to credentials.
+  - each key must exactly match the hostname portion of the urls you intend to
+    crawl or publish to (e.g., `your-instance.atlassian.net`).
+  - `username`: the confluence/cloud email login.
+  - `api_token`: an api token generated from your atlassian account.
+  - `space_key`: the target space key used when publishing pages.
+
+### behavior
+
+- if the file does not exist, confluence functionality is skipped gracefully.
+- when crawling: a url whose host matches a configured confluence host will use
+  the `Confluence::Fetcher`; otherwise the generic `Html::Fetcher` is used.
+- when publishing: only hosts present under `confluence` are supported; others
+  will log a warning and no-op.
+
+### security / git hygiene
+
+- `config/delve.yml` is ignored by git (see `.gitignore`). keep your personal
+  tokens out of source control.
+- distribute `config/delve.yml.example` (sanitized) for collaborators.
+
+### reloading
+
+- the config is memoized; call `Delve::Config.reload!` in code (or restart the
+  process) after editing `config/delve.yml` to pick up changes.
