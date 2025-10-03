@@ -17,7 +17,23 @@ module Soak
       end
 
       def content
-        Readability::Document.new(@html).content
+        html_content = Readability::Document.new(
+          @html,
+          tags: %w[div p a h1 h2 h3 h4 h5 h6 em strong code pre blockquote ul ol li],
+          attributes: %w[href]
+        ).content
+        doc = Nokogiri::HTML(html_content)
+        base_uri = URI.parse(@url)
+
+        doc.css('a').each do |a|
+          href = a['href']
+          next if href.nil? || href.empty?
+
+          uri = URI.parse(href)
+          a['href'] = base_uri.merge(uri).to_s if uri.relative?
+        end
+
+        doc.to_html
       end
 
       def links
