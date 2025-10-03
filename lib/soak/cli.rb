@@ -1,5 +1,6 @@
 require 'thor'
 require_relative 'crawlers/spider'
+require_relative 'crawlers/spider_domain'
 
 module Soak
   class CLI < Thor
@@ -9,9 +10,8 @@ module Soak
     end
 
     def self.start(args)
-      # if the first argument is not a thor command, assume it's a url
-      # and prepend the default command.
-      if args.first && !self.respond_to?(args.first)
+      commands = self.all_commands.keys
+      if args.first && !commands.include?(args.first.gsub('-', '_')) && args.first !~ /^-/
         args.unshift('crawl')
       end
       super
@@ -20,6 +20,12 @@ module Soak
     desc "crawl <url> [depth]", "crawl a url in all directions"
     def crawl(url, depth = 2)
       crawler = Soak::Crawlers::Spider.new(url, depth.to_i)
+      crawler.crawl
+    end
+
+    desc "crawl-domain <url> [depth]", "crawl a url within its domain"
+    def crawl_domain(url, depth = 2)
+      crawler = Soak::Crawlers::SpiderDomain.new(url, depth.to_i)
       crawler.crawl
     end
   end
