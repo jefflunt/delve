@@ -2,7 +2,8 @@ require 'faraday'
 require 'faraday/follow_redirects'
 
 module Soak
-  class Fetcher
+  module Html
+    class Fetcher
     def self.fetch(url)
       response = _faraday.get(url)
       response.body if response.success?
@@ -16,6 +17,7 @@ module Soak
         faraday.use Faraday::FollowRedirects::Middleware
         faraday.adapter Faraday.default_adapter
       end
+    end
     end
   end
 end
