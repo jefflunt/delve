@@ -15,8 +15,8 @@ template:
 
 examples:
   delve crawl https://example.com 3
-  delve crawl-domain https://example.com 3
-  delve crawl-path https://example.com/docs 3
+  delve crawl-domain https://example.com 3      # domain-limited crawl
+  delve crawl-path https://example.com/docs 3   # path-limited crawl
 ```
 
 #### publishing local files
@@ -34,10 +34,8 @@ examples:
 
 * `crawl`: starts at the specified `resource` and crawls outward in all
   directions.
-* `crawl-domain`: crawls outward, but stays within the domain of the
-  starting `resource`.
-* `crawl-path`: crawls outward, but stays within the path of the starting
-  `resource`.
+* `crawl-domain`: same engine, applies a domain filter (effective domain match).
+* `crawl-path`: same engine, applies a path prefix filter based on the start url.
 
 ## tech stack
 
@@ -63,9 +61,7 @@ delve/
         │   ├── fetcher.rb
         │   └── cleaner.rb
         └── crawlers/               # content crawlers
-            ├── spider.rb
-             ├── spider_domain.rb
-             └── spider_path.rb
+            └── spider.rb
 ```
 
 ## for developers
@@ -76,7 +72,7 @@ extensible. the main components interact in the following sequence:
 ```ascii
  [ cli ]
     |
-    `-> [ crawler ] (e.g., spider, spider_domain)
+    `--> [ crawler ] (spider w/ filter)
            |
            | (for each url)
            v
