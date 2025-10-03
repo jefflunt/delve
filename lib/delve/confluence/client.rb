@@ -1,7 +1,7 @@
 require 'faraday'
 require 'json'
 
-module Soak
+module Delve
   module Confluence
     class Client
       def initialize(host, username, api_token)

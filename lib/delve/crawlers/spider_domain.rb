@@ -4,15 +4,15 @@ require_relative '../saver'
 require 'set'
 require 'uri'
 
-module Soak
+module Delve
   module Crawlers
-    class SpiderPath
+    class SpiderDomain
       def initialize(start_url, depth = 2)
         @start_url = start_url
         @depth = depth
         @queue = Queue.new
         @visited = Set.new
-        @base_path = URI.parse(start_url).path
+        @domain = _extract_domain(start_url)
       end
 
       def crawl
@@ -23,11 +23,11 @@ module Soak
           url, current_depth = @queue.pop
           next if current_depth > @depth
 
-          content, links = Soak::Fetcher.fetch(url)
+          content, links = Delve::Fetcher.fetch(url)
           next unless content
 
-          cleaner = Soak::Html::Cleaner.new(content, url)
-          saver = Soak::Saver.new(cleaner.markdown, url)
+          cleaner = Delve::Html::Cleaner.new(content, url)
+          saver = Delve::Saver.new(cleaner.markdown, url)
           saver.save
 
           puts "saved #{url}"
@@ -36,7 +36,7 @@ module Soak
             links ||= cleaner.links
             links.each do |link|
               next if @visited.include?(link)
-              next unless _in_path?(link)
+              next unless _in_domain?(link)
               @visited << link
               @queue << [link, current_depth + 1]
             end
@@ -44,10 +44,19 @@ module Soak
         end
       end
 
-      def _in_path?(link)
-        URI.parse(link).path.start_with?(@base_path)
+      def _extract_domain(url)
+        URI
+          .parse(url)
+          .host
+          .split('.')
+          .last(2)
+          .join('.')
       rescue URI::InvalidURIError
-        false
+        nil
+      end
+
+      def _in_domain?(link)
+        _extract_domain(link) == @domain
       end
     end
   end

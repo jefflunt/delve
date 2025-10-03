@@ -1,6 +1,6 @@
 require_relative 'client'
 
-module Soak
+module Delve
   module Confluence
     class Fetcher
       def initialize(url, config)

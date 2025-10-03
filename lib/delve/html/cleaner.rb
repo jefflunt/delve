@@ -3,7 +3,7 @@ require 'readability'
 require 'reverse_markdown'
 require 'uri'
 
-module Soak
+module Delve
   module Html
     class Cleaner
       def initialize(html, url)

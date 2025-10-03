@@ -1,7 +1,7 @@
 require 'faraday'
 require 'faraday/follow_redirects'
 
-module Soak
+module Delve
   module Html
     class Fetcher
     def self.fetch(url)

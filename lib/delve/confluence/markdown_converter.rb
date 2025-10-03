@@ -1,6 +1,6 @@
 require 'kramdown'
 
-module Soak
+module Delve
   module Confluence
     class MarkdownConverter
       def self.to_html(markdown)

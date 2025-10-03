@@ -2,7 +2,7 @@ require 'yaml'
 require_relative 'html/fetcher'
 require_relative 'confluence/fetcher'
 
-module Soak
+module Delve
   class Fetcher
     def self.fetch(url)
       config = _load_config
@@ -18,7 +18,7 @@ module Soak
     end
 
     def self._load_config
-      config_path = File.expand_path('../../config/soak.yml', __dir__)
+      config_path = File.expand_path('../../config/delve.yml', __dir__)
       File.exist?(config_path) ? YAML.load_file(config_path) : {}
     end
   end

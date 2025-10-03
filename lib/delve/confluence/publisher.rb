@@ -1,7 +1,7 @@
 require_relative 'client'
 require_relative 'markdown_converter'
 
-module Soak
+module Delve
   module Confluence
     class Publisher
       def initialize(host, directory, root_page_id)
@@ -49,7 +49,7 @@ module Soak
       end
 
       def _load_config
-        config_path = File.expand_path('../../../config/soak.yml', __dir__)
+        config_path = File.expand_path('../../../config/delve.yml', __dir__)
         config = File.exist?(config_path) ? YAML.load_file(config_path) : {}
         config['confluence'][@host]
       end

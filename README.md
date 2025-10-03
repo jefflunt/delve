@@ -1,20 +1,20 @@
-# `soak`
+# `delve`
 
 ## overview
 
-`soak` is a command-line tool for scaping documents such as the web, with a
+`delve` is a command-line tool for scaping documents such as the web, with a
 focus on converting content to markdown to make it easily ingestible by llms.
 
 ### usage
 
 ```
 template:
-  soak <mode> <resource> [depth]
+  delve <mode> <resource> [depth]
 
 examples:
-  soak crawl https://example.com 3
-  soak crawl-domain https://example.com 3
-  soak crawl-path https://example.com/docs 3
+  delve crawl https://example.com 3
+  delve crawl-domain https://example.com 3
+  delve crawl-path https://example.com/docs 3
 ```
 
 * `crawl`: starts at the specified `resource` and crawls outward in all
@@ -36,12 +36,12 @@ examples:
 ## project structure
 
 ```
-soak/
+delve/
 ├── Gemfile
 ├── bin/
-│   └── soak
+│   └── delve
 └── lib/
-    └── soak
+    └── delve
         ├── cli.rb                  # the main program, effectively
         ├── saver.rb
         ├── html/                   # html processing tools
@@ -83,7 +83,7 @@ extensible. the main components interact in the following sequence:
 - **crawler:** manages the queue of urls to visit and orchestrates the fetching,
   cleaning, and saving process for each url.
 - **fetcher (dispatcher):** this is the brain of the content retrieval. based on
-  the url's host and the `soak.yml` config, it decides whether to use the
+  the url's host and the `delve.yml` config, it decides whether to use the
   `Html::Fetcher` for generic web pages or the `Confluence::Fetcher` for
   confluence sites.
 - **cleaner/saver:** the `Html::Cleaner` processes the fetched html, and the

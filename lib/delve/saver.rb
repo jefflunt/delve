@@ -1,7 +1,7 @@
 require 'fileutils'
 require 'uri'
 
-module Soak
+module Delve
   class Saver
     def initialize(markdown, url, output_dir = 'content')
       @markdown = markdown

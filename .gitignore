@@ -1,4 +1,4 @@
 .DS_Store
 content/*
 .rbenv-gemsets
-config/soak.yml
+config/delve.yml
