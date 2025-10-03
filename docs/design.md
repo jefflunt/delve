@@ -76,7 +76,7 @@ there are two main modes:
 - **responsibility:** save the processed markdown content to the filesystem.
 - **implementation:** a simple class that takes markdown content and a source
   url. it will generate a clean filename from the url (e.g.,
-  `https://example.com/foo/bar` -> `foo-bar.md`) and save it in the specified
+  `https://example.com/foo/bar` -> `content/foo-bar.md`) and save it in the specified
   output directory. heirarchies of pages (based on their relative path) will be
   stored in child folders, and related links (i.e. that change relative paths,
   or jump to other domains/subdomains) are stored in a `related/` folder with a
