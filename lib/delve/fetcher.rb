@@ -1,11 +1,11 @@
-require 'yaml'
 require_relative 'html/fetcher'
 require_relative 'confluence/fetcher'
+require_relative 'config'
 
 module Delve
   class Fetcher
     def self.fetch(url)
-      config = _load_config
+      config = Delve::Config.load
       uri = URI.parse(url)
 
       if config['confluence'] && config['confluence'][uri.host]
@@ -18,8 +18,7 @@ module Delve
     end
 
     def self._load_config
-      config_path = File.expand_path('../../config/delve.yml', __dir__)
-      File.exist?(config_path) ? YAML.load_file(config_path) : {}
+      Delve::Config.load
     end
   end
 end

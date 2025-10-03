@@ -1,5 +1,5 @@
-require 'yaml'
 require_relative 'confluence/publisher'
+require_relative 'config'
 
 module Delve
   class Publisher
@@ -7,7 +7,7 @@ module Delve
       @host = host
       @directory = directory
       @root_page_id = root_page_id
-      @config = _load_config
+      @config = Delve::Config.load
     end
 
     def publish
@@ -24,8 +24,7 @@ module Delve
     end
 
     def _load_config
-      config_path = File.expand_path('../config/delve.yml', __dir__)
-      File.exist?(config_path) ? YAML.load_file(config_path) : {}
+      Delve::Config.load
     end
   end
 end

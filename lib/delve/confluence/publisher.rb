@@ -1,5 +1,6 @@
 require_relative 'client'
 require_relative 'markdown_converter'
+require_relative '../config'
 
 module Delve
   module Confluence
@@ -8,7 +9,7 @@ module Delve
         @host = host
         @directory = directory
         @root_page_id = root_page_id
-        @config = _load_config
+        @config = _config_for_host
         @client = Client.new(host, @config['username'], @config['api_token'])
       end
 
@@ -48,10 +49,9 @@ module Delve
         end
       end
 
-      def _load_config
-        config_path = File.expand_path('../../../config/delve.yml', __dir__)
-        config = File.exist?(config_path) ? YAML.load_file(config_path) : {}
-        config['confluence'][@host]
+      def _config_for_host
+        config = Delve::Config.load
+        (config['confluence'] && config['confluence'][@host]) || {}
       end
     end
   end
