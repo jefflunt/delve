@@ -4,7 +4,8 @@ require_relative 'saver'
 require 'set'
 
 module Soak
-  class Crawler
+  # given a starting url, crowls outward upto the maximum specified depth
+  class Spider
     def initialize(start_url, depth = 2)
       @start_url = start_url
       @depth = depth
