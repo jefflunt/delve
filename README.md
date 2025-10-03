@@ -143,13 +143,5 @@ confluence:
 - when publishing: only hosts present under `confluence` are supported; others
   will log a warning and no-op.
 
-### security / git hygiene
-
-- `config/delve.yml` is ignored by git (see `.gitignore`). keep your personal
-  tokens out of source control.
-- distribute `config/delve.yml.example` (sanitized) for collaborators.
-
-### reloading
-
-- the config is memoized; call `Delve::Config.reload!` in code (or restart the
-  process) after editing `config/delve.yml` to pick up changes.
+**NOTE:** `config/delve.yml` is ignored by git (see `.gitignore`) in order to
+avoid credentials being added to source control.
