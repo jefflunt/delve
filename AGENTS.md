@@ -34,3 +34,6 @@ class my_class
   end
 end
 ```
+
+## testing
+- run `bin/delve crawl https://jefflunt.com` and ensure that the exit status is `0`
