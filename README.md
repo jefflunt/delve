@@ -7,7 +7,7 @@ focus on converting content to markdown to make it easily ingestible by llms.
 
 ### usage
 
-ingesting information, crawling a website.
+#### ingesting information, crawling a website.
 
 ```
 template:
@@ -19,7 +19,8 @@ examples:
   delve crawl-path https://example.com/docs 3
 ```
 
-publishing local files to confluence
+#### publishing local files to confluence
+
 ```
 template:
   delve confluence-publish <host> <folder> <space_id/parent_page_id>
