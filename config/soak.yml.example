@@ -1,0 +1,11 @@
+# soak configuration file
+#
+# copy this file to soak.yml and fill in your credentials.
+# do not commit soak.yml to source control.
+
+confluence:
+  # add each of your confluence instances here
+  # the key is the hostname of the confluence instance
+  "your-instance.atlassian.net":
+    username: "your-email@example.com"
+    api_token: "your-confluence-api-token"

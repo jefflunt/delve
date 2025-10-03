@@ -1,4 +1,4 @@
-require_relative '../html/fetcher'
+require_relative '../fetcher'
 require_relative '../html/cleaner'
 require_relative '../saver'
 require 'set'
@@ -21,17 +21,18 @@ module Soak
           url, current_depth = @queue.pop
           next if current_depth > @depth
 
-          html = Soak::Html::Fetcher.fetch(url)
-          next unless html
+          content, links = Soak::Fetcher.fetch(url)
+          next unless content
 
-          cleaner = Soak::Html::Cleaner.new(html, url)
+          cleaner = Soak::Html::Cleaner.new(content, url)
           saver = Soak::Saver.new(cleaner.markdown, url)
           saver.save
 
           puts "saved #{url}"
 
           if current_depth < @depth
-            cleaner.links.each do |link|
+            links ||= cleaner.links
+            links.each do |link|
               next if @visited.include?(link)
               @visited << link
               @queue << [link, current_depth + 1]
