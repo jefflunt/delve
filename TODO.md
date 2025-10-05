@@ -8,9 +8,9 @@ T001 create `delve transform` command for LLM-based markdown generation
 
 T002 enhance confluence fetcher for full page fidelity
 | request multiple representations (export_view, view, storage) and select best
-- add attachment pagination fetch (filename, download link, size, media type)
-- paginate child pages beyond default limit
+| add attachment pagination fetch (filename, download link, size, media type)
+| paginate child pages beyond default limit
 - extend inline link extraction to ac:link / ri:page references
-- add content length + chosen representation to log output
+| add content length + chosen representation to log output
 - add optional pretty_raw formatting (newline after block tags) controlled by config flag
-- fallback: if export_view length < 70% of storage length use storage
+| fallback: if export_view length < 70% of storage length use storage

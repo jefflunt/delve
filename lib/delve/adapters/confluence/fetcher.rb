@@ -17,14 +17,17 @@ module Delve
 
         content, status, rep = _fetch_content(page_id)
         links = []
+        attachments = []
         if status == 200 && content
           links.concat(_fetch_child_links(page_id))
           links.concat(_extract_inline_links(content))
+          links.concat(_extract_storage_page_refs(page_id))
           links.uniq!
+          attachments = _fetch_all_attachments(page_id)
         end
         # log representation and length for diagnostics
-        puts ("confl  rep=#{rep} len=#{content ? content.bytesize : 0} #{@uri}") if content
-        FetchResult.new(url: @uri.to_s, content: content, links: links, status: status, type: 'confl')
+        puts ("confl  rep=#{rep} len=#{content ? content.bytesize : 0} attach=#{attachments.length} #{@uri}") if content
+        FetchResult.new(url: @uri.to_s, content: content, links: links, status: status, type: 'confl', attachments: attachments)
       end
 
       private
@@ -32,6 +35,48 @@ module Delve
       def _extract_page_id
         match = @uri.path.match(/\/pages\/(\d+)/)
         match[1] if match
+      end
+
+      def _fetch_all_attachments(page_id)
+        start = 0
+        acc = []
+        loop do
+          response = @client.get("/wiki/rest/api/content/#{page_id}/child/attachment", { limit: 50, start: start })
+          break unless response && response['results']
+          response['results'].each do |att|
+            acc << {
+              'id' => att['id'],
+              'title' => att['title'],
+              'mediaType' => att.dig('metadata', 'mediaType'),
+              'download' => att.dig('_links', 'download') ? "https://#{@uri.host}#{att.dig('_links', 'download')}" : nil,
+              'size' => att.dig('extensions', 'fileSize')
+            }
+          end
+          size = response['size'] || response['results'].length
+            limit = response['limit'] || 50
+          start_val = response['start'] || start
+          total = response['totalSize'] || response['size']
+          break if total && (start_val + size) >= total
+          start = start_val + size
+        end
+        acc
+      end
+
+      # extract Confluence storage page refs (ac:link / ri:page) by re-querying storage if not already chosen
+      def _extract_storage_page_refs(page_id)
+        storage_response = @client.get("/wiki/rest/api/content/#{page_id}", expand: 'body.storage')
+        return [] unless storage_response && storage_response['body'] && storage_response['body']['storage']
+        storage_html = storage_response['body']['storage']['value']
+        doc = Nokogiri::HTML(storage_html)
+        base = "https://#{@uri.host}"
+        links = []
+        doc.css('ri\:page').each do |node|
+          rid = node['ri:content-title'] || node['ri:page']
+          # without direct id we skip; these may require search which we avoid for now
+        end
+        # ac:link with ri:page child referencing page by content title (not reliably resolvable without search)
+        # return empty for now until a title->id map is implemented
+        links
       end
 
       def _fetch_content(page_id)
@@ -61,12 +106,22 @@ module Delve
       end
 
       def _fetch_child_links(page_id)
-        response = @client.get("/wiki/rest/api/content/#{page_id}/child/page")
-        return [] unless response && response['results']
-
-        response['results'].map do |page|
-          "https://#{@uri.host}#{@uri.path.gsub(/\/pages\/\d+/, "/pages/#{page['id']}")}" 
+        start = 0
+        acc = []
+        loop do
+          response = @client.get("/wiki/rest/api/content/#{page_id}/child/page", { limit: 50, start: start })
+          break unless response && response['results']
+          response['results'].each do |page|
+            acc << "https://#{@uri.host}#{@uri.path.gsub(/\/pages\/\d+/, "/pages/#{page['id']}")}" 
+          end
+          size = response['size'] || response['results'].length
+          limit = response['limit'] || 50
+          start_val = response['start'] || start
+          total = response['totalSize'] || response['size']
+          break if total && (start_val + size) >= total
+          start = start_val + size
         end
+        acc
       end
 
       def _extract_inline_links(html)
@@ -74,15 +129,12 @@ module Delve
         base = "https://#{@uri.host}"
         links = []
 
-        # standard anchor tags
         doc.css('a[href]').each do |a|
           href = a['href']
           next if href.nil? || href.empty?
           begin
             uri = URI.parse(href)
-            if uri.relative?
-              uri = URI.join(base, href)
-            end
+            uri = URI.join(base, href) if uri.relative?
             links << uri.to_s if uri.host == @uri.host
           rescue URI::InvalidURIError
             next
