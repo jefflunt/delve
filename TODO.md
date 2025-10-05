@@ -24,7 +24,7 @@ T003 make `delve crawl` raw-only (unify with prior transform)
 | update README removing transform references
 
 T004 update crawl-domain and crawl-path to raw-only
-- update commands to use unified raw behavior
-- retain domain/path filtering logic
-- ensure logging lists raw file paths
-- verify sample runs exit 0
+| update commands to use unified raw behavior
+| retain domain/path filtering logic
+| ensure logging lists raw file paths
+| verify sample runs exit 0
