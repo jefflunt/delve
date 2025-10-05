@@ -25,6 +25,10 @@ module Delve
           links.uniq!
           attachments = _fetch_all_attachments(page_id)
         end
+        # optional pretty_raw formatting (basic newline insertion after block tags)
+        if content && @config['pretty_raw'] && @config['pretty_raw'] =~ /^(1|true|yes|on)$/i
+          content = content.gsub(/<(\/)?(p|div|h[1-6]|ul|ol|li|table|thead|tbody|tr|td|th|pre|blockquote)>/i) { |m| "#{m}\n" }
+        end
         # log representation and length for diagnostics
         puts ("confl  rep=#{rep} len=#{content ? content.bytesize : 0} attach=#{attachments.length} #{@uri}") if content
         FetchResult.new(url: @uri.to_s, content: content, links: links, status: status, type: 'confl', attachments: attachments)
@@ -62,21 +66,35 @@ module Delve
         acc
       end
 
-      # extract Confluence storage page refs (ac:link / ri:page) by re-querying storage if not already chosen
+      # extract Confluence storage page refs (ac:link / ri:page)
+      # attempts to resolve by content-id; falls back to title+space search
       def _extract_storage_page_refs(page_id)
         storage_response = @client.get("/wiki/rest/api/content/#{page_id}", expand: 'body.storage')
         return [] unless storage_response && storage_response['body'] && storage_response['body']['storage']
         storage_html = storage_response['body']['storage']['value']
         doc = Nokogiri::HTML(storage_html)
-        base = "https://#{@uri.host}"
         links = []
-        doc.css('ri\:page').each do |node|
-          rid = node['ri:content-title'] || node['ri:page']
-          # without direct id we skip; these may require search which we avoid for now
+        doc.css('ac\:link ri\:page, ri\:page').each do |node|
+          cid = node['ri:content-id'] || node['ri:resource-id']
+          if cid
+            links << @uri.to_s.gsub(/\/pages\/\d+/, "/pages/#{cid}")
+            next
+          end
+          title = node['ri:content-title']
+          next unless title
+          space_key = @config['space_key']
+          next unless space_key
+          begin
+            search = @client.get('/wiki/rest/api/content', { title: title, spaceKey: space_key, limit: 1 })
+            if search && search['results'] && search['results'][0]
+              scid = search['results'][0]['id']
+              links << @uri.to_s.gsub(/\/pages\/\d+/, "/pages/#{scid}") if scid
+            end
+          rescue StandardError
+            next
+          end
         end
-        # ac:link with ri:page child referencing page by content title (not reliably resolvable without search)
-        # return empty for now until a title->id map is implemented
-        links
+        links.uniq
       end
 
       def _fetch_content(page_id)
