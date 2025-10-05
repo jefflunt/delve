@@ -72,27 +72,33 @@ module Delve
         storage_response = @client.get("/wiki/rest/api/content/#{page_id}", expand: 'body.storage')
         return [] unless storage_response && storage_response['body'] && storage_response['body']['storage']
         storage_html = storage_response['body']['storage']['value']
-        doc = Nokogiri::HTML(storage_html)
+        doc = Nokogiri::XML(storage_html)
         links = []
-        doc.css('ac\:link ri\:page, ri\:page').each do |node|
-          cid = node['ri:content-id'] || node['ri:resource-id']
-          if cid
-            links << @uri.to_s.gsub(/\/pages\/\d+/, "/pages/#{cid}")
-            next
-          end
-          title = node['ri:content-title']
-          next unless title
-          space_key = @config['space_key']
-          next unless space_key
-          begin
-            search = @client.get('/wiki/rest/api/content', { title: title, spaceKey: space_key, limit: 1 })
-            if search && search['results'] && search['results'][0]
-              scid = search['results'][0]['id']
-              links << @uri.to_s.gsub(/\/pages\/\d+/, "/pages/#{scid}") if scid
+        begin
+          # search for any ri:page regardless of nesting; avoid CSS namespace complexity
+          doc.xpath('//*[local-name()="page" and namespace-uri()="http://atlassian.com/content/ri"]').each do |node|
+            cid = node.attribute_with_ns('content-id', 'http://atlassian.com/content/ri')&.value ||
+                  node.attribute_with_ns('resource-id', 'http://atlassian.com/content/ri')&.value
+            if cid
+              links << @uri.to_s.gsub(/\/pages\/\d+/, "/pages/#{cid}")
+              next
             end
-          rescue StandardError
-            next
+            title_attr = node.attribute_with_ns('content-title', 'http://atlassian.com/content/ri')&.value
+            next unless title_attr
+            space_key = @config['space_key']
+            next unless space_key
+            begin
+              search = @client.get('/wiki/rest/api/content', { title: title_attr, spaceKey: space_key, limit: 1 })
+              if search && search['results'] && search['results'][0]
+                scid = search['results'][0]['id']
+                links << @uri.to_s.gsub(/\/pages\/\d+/, "/pages/#{scid}") if scid
+              end
+            rescue StandardError
+              next
+            end
           end
+        rescue StandardError
+          # ignore parsing errors
         end
         links.uniq
       end
