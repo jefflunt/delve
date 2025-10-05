@@ -1,8 +1,6 @@
 require 'faraday'
 require 'json'
-require 'uri'
 require 'base64'
-require 'erb'
 
 module Delve
   module Confluence
@@ -15,7 +13,6 @@ module Delve
 
       def get(path, params = {})
         response = connection.get(path, params)
-        _debug_request('GET', path, params, response)&.dig(:json)
         JSON.parse(response.body) if response.success?
       end
 
@@ -24,7 +21,6 @@ module Delve
           req.headers['Content-Type'] = 'application/json'
           req.body = body.to_json
         end
-        _debug_request('POST', path, nil, response)
         JSON.parse(response.body) if response.success?
       end
 
@@ -33,13 +29,10 @@ module Delve
           req.headers['Content-Type'] = 'application/json'
           req.body = body.to_json
         end
-        _debug_request('PUT', path, nil, response)
         JSON.parse(response.body) if response.success?
       end
 
       def find_page_by_title(title, parent_id)
-        # Confluence API doesn't let you search by parent AND title in one go,
-        # so we get all children and filter manually.
         children = get("/wiki/rest/api/content/#{parent_id}/child/page")
         children['results'].find { |p| p['title'] == title } if children && children['results']
       end
@@ -84,34 +77,8 @@ module Delve
       end
 
       def _auth_header
-        "Basic #{Base64.encode64("#{@username}:#{@api_token}")}".gsub("\n", '').strip
-      end
-
-      def _debug_request(verb, path, params, response_or_headers)
-        query = params && !params.empty? ? "?#{URI.encode_www_form(params)}" : ''
-        full = "https://#{@host}#{path}#{query}"
-        headers = if response_or_headers.respond_to?(:headers)
-                    response_or_headers.headers
-                  else
-                    response_or_headers
-                  end
-        sanitized = _sanitize_headers(headers)
-        status = response_or_headers.respond_to?(:status) ? response_or_headers.status : 'n/a'
-        puts "[delve confluence debug] #{verb} #{full} (status #{status})\n  headers: #{sanitized.inspect}"
-      rescue => e
-        warn "debug logging failed: #{e.message}"
-      end
-
-      def _sanitize_headers(headers)
-        return {} unless headers
-        headers.each_with_object({}) do |(k, v), acc|
-          if k.downcase == 'authorization' && v&.start_with?('Basic ')
-            token = v.split(' ', 2)[1]
-            acc[k] = "Basic #{token[0,8]}..." # truncate for safety
-          else
-            acc[k] = v
-          end
-        end
+        token = Base64.strict_encode64("#{@username}:#{@api_token}")
+        "Basic #{token}"
       end
     end
   end
