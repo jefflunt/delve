@@ -3,13 +3,28 @@ require 'erb'
 
 module Delve
   class Config
+    SCHEMA = {
+      'confluence' => :hash # hash of host => host_config
+    }
+
+    CONFLUENCE_HOST_SCHEMA = {
+      'username' => :string,
+      'api_token' => :string,
+      'space_key' => :string
+    }
+
+    REQUIRED_TOP_LEVEL = ['confluence']
+    REQUIRED_CONFLUENCE_KEYS = ['username', 'api_token'] # space_key optional for read-only
+
     def self.load
       @config ||= begin
                     path = File.expand_path('../../config/delve.yml', __dir__)
                     if File.exist?(path)
                       raw = File.read(path)
                       erb = ERB.new(raw).result
-                      YAML.safe_load(erb, permitted_classes: [], permitted_symbols: [], aliases: false)
+                      data = YAML.safe_load(erb, permitted_classes: [], permitted_symbols: [], aliases: false) || {}
+                      _validate!(data)
+                      data
                     else
                       {}
                     end
@@ -27,6 +42,49 @@ module Delve
 
     def self.confluence_host(host)
       confluence_config[host]
+    end
+
+    def self._validate!(data)
+      # required top-level keys
+      missing = REQUIRED_TOP_LEVEL.reject { |k| data.key?(k) }
+      raise "config missing required keys: #{missing.join(', ')}" unless missing.empty?
+
+      # unknown top-level keys
+      unknown_top = data.keys - SCHEMA.keys
+      raise "config has unknown top-level keys: #{unknown_top.join(', ')}" unless unknown_top.empty?
+
+      # confluence structure
+      conf = data['confluence']
+      unless conf.is_a?(Hash)
+        raise 'config key confluence must be a mapping of host -> settings'
+      end
+
+      conf.each do |host, host_cfg|
+        unless host_cfg.is_a?(Hash)
+          raise "confluence host #{host} must map to a hash of settings"
+        end
+
+        # required host keys
+        host_missing = REQUIRED_CONFLUENCE_KEYS.reject { |k| host_cfg.key?(k) }
+        unless host_missing.empty?
+          raise "confluence host #{host} missing required keys: #{host_missing.join(', ')}"
+        end
+
+        # unknown host keys
+        unknown = host_cfg.keys - CONFLUENCE_HOST_SCHEMA.keys
+        unless unknown.empty?
+          raise "confluence host #{host} has unknown keys: #{unknown.join(', ')}"
+        end
+
+        # simple type checks (non-empty string)
+        CONFLUENCE_HOST_SCHEMA.each do |k, _|
+          next unless host_cfg.key?(k)
+          v = host_cfg[k]
+          unless v.is_a?(String) && !v.strip.empty?
+            raise "confluence host #{host} key #{k} must be a non-empty string"
+          end
+        end
+      end
     end
   end
 end
