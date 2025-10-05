@@ -7,7 +7,7 @@ T001 create `delve transform` command for LLM-based markdown generation
 | save placeholder empty .md files in `content/` matching fetched pages
 
 T002 enhance confluence fetcher for full page fidelity
-- request multiple representations (export_view, view, storage) and select best
+| request multiple representations (export_view, view, storage) and select best
 - add attachment pagination fetch (filename, download link, size, media type)
 - paginate child pages beyond default limit
 - extend inline link extraction to ac:link / ri:page references

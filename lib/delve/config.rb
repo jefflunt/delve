@@ -10,7 +10,9 @@ module Delve
     CONFLUENCE_HOST_SCHEMA = {
       'username' => :string,
       'api_token' => :string,
-      'space_key' => :string
+      'space_key' => :string,
+      'pretty_raw' => :string, # treat as boolean-ish string
+      'representations' => :string # comma-separated list
     }
 
     REQUIRED_TOP_LEVEL = ['confluence']

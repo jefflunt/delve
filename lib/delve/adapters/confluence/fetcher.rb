@@ -15,13 +15,15 @@ module Delve
         page_id = _extract_page_id
         return FetchResult.new(url: @uri.to_s, content: nil, links: [], status: 0, type: 'confl') unless page_id
 
-        content, status = _fetch_content(page_id)
+        content, status, rep = _fetch_content(page_id)
         links = []
         if status == 200 && content
           links.concat(_fetch_child_links(page_id))
           links.concat(_extract_inline_links(content))
           links.uniq!
         end
+        # log representation and length for diagnostics
+        puts ("confl  rep=#{rep} len=#{content ? content.bytesize : 0} #{@uri}") if content
         FetchResult.new(url: @uri.to_s, content: content, links: links, status: status, type: 'confl')
       end
 
@@ -33,15 +35,29 @@ module Delve
       end
 
       def _fetch_content(page_id)
-        response = @client.get("/wiki/rest/api/content/#{page_id}", expand: 'body.export_view')
-        if response && response['body'] && response['body']['export_view']
-          [response['body']['export_view']['value'], @client.last_status]
-        elsif response && response['body'] && response['body']['storage']
-          # fallback: some older instances may not support export_view
-            [response['body']['storage']['value'], @client.last_status]
-        else
-          [nil, @client.last_status || 0]
+        response = @client.get("/wiki/rest/api/content/#{page_id}", expand: 'body.export_view,body.view,body.storage')
+        return [nil, @client.last_status || 0, nil] unless response && response['body']
+        body = response['body']
+        export_v = body.dig('export_view', 'value') if body['export_view']
+        view_v = body.dig('view', 'value') if body['view']
+        storage_v = body.dig('storage', 'value') if body['storage']
+        # choose best representation: prefer export_view unless it's too small compared to storage
+        chosen = export_v
+        rep = 'export_view'
+        if storage_v && export_v && export_v.bytesize < (storage_v.bytesize * 0.7)
+          chosen = storage_v
+          rep = 'storage'
         end
+        if !chosen
+          if view_v
+            chosen = view_v
+            rep = 'view'
+          elsif storage_v
+            chosen = storage_v
+            rep = 'storage'
+          end
+        end
+        [chosen, @client.last_status, rep]
       end
 
       def _fetch_child_links(page_id)
