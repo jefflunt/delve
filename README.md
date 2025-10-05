@@ -2,8 +2,7 @@
 
 ## overview
 
-`delve` is a command-line tool for scaping documents such as the web, with a
-focus on converting content to markdown to make it easily ingestible by llms.
+`delve` is a command-line tool for scraping documents such as the web, focusing on collecting raw html (plus confluence representations) that can later be converted to markdown by llms.
 
 ### usage
 
@@ -42,8 +41,7 @@ directions.
 - **language:** `ruby`
 - **http client:** `faraday`
 - **html parsing & cleaning:** `nokogiri`
-- **content extraction:** `ruby-readability` gem
-- **html-to-markdown conversion:** `reverse_markdown`
+- **content extraction:** (previous readability + conversion removed; raw html preserved)
 - **cli framework:** `thor`
 
 ## project structure
@@ -93,23 +91,18 @@ extensible. the main components interact in the following sequence:
            v                                                     |
          [ Html::Fetcher ]                                       |
            |                                                     |
-           v                                                     |
-         [ Html::Cleaner ] <-------------------------------------+
-           |
-           v
-         [ Saver ]
+            v                                                     |
+          (raw html saved) <---------------------------------------+
+            |
+            v
+          [ Saver (raw + placeholder) ]
 ```
 
 - **cli:** the entry point. it parses user arguments and instantiates the
   spider with the appropriate filter.
-- **spider:** manages the queue of urls to visit and orchestrates the fetching,
-  cleaning, and saving process for each url.
-- **fetcher (dispatcher):** this is the brain of the content retrieval. based on
-  the url's host and the `delve.yml` config, it decides whether to use the
-  `Html::Fetcher` for generic web pages or the `Confluence::Fetcher` for
-  confluence sites.
-- **cleaner/saver:** the `Html::Cleaner` processes the fetched html, and the
-  `Saver` writes the final markdown to disk.
+- **spider:** manages the queue of urls to visit and orchestrates fetching and saving raw content for each url.
+- **fetcher (dispatcher):** selects adapter: generic web vs confluence.
+- **saver:** writes raw html under `content_raw/` plus an empty placeholder `.md` under `content/` for later LLM conversion.
 - **publisher:** dispatches publishing to confluence (if configured) or no-ops.
 - **config:** central place for loading and querying configuration.
 - **fetch result + logger:** fetch operations return a lightweight `FetchResult`
@@ -157,8 +150,7 @@ confluence:
 ### behavior
 
 - if the file does not exist, confluence functionality is skipped gracefully.
-- when crawling: a url whose host matches a configured confluence host will use
-  the `Confluence::Fetcher`; otherwise the generic `Html::Fetcher` is used.
+- when crawling: a url whose host matches a configured confluence host will use the `Confluence::Fetcher`; otherwise the generic `Html::Fetcher` is used. All content is saved raw (no internal markdown conversion).
 - when publishing: only hosts present under `confluence` are supported; others
   will log a warning and no-op.
 - config validation runs at load time; any structural errors are printed and the

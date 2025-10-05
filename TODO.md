@@ -19,9 +19,9 @@ T003 make `delve crawl` raw-only (unify with prior transform)
 | remove `transform` command from CLI
 | update spider to remove markdown conversion branch
 | delete obsolete markdown conversion classes (html adapter converter, publisher pieces)
-- ensure crawl outputs raw file paths like previous transform
-- verify `bin/delve crawl https://jefflunt.com` exit 0
-- update README removing transform references
+| ensure crawl outputs raw file paths like previous transform
+| verify `bin/delve crawl https://jefflunt.com` exit 0
+| update README removing transform references
 
 T004 update crawl-domain and crawl-path to raw-only
 - update commands to use unified raw behavior
