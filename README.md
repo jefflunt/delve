@@ -108,6 +108,9 @@ extensible. the main components interact in the following sequence:
   `Saver` writes the final markdown to disk.
 - **publisher:** dispatches publishing to confluence (if configured) or no-ops.
 - **config:** central place for loading and querying configuration.
+- **fetch result + logger:** fetch operations return a lightweight `FetchResult`
+  struct (url, content, links, status, type, error). logging is centralized so
+  each line of crawl output shows the source type and status in fixed-width form.
 
 ## configuration
 
@@ -154,6 +157,20 @@ confluence:
   the `Confluence::Fetcher`; otherwise the generic `Html::Fetcher` is used.
 - when publishing: only hosts present under `confluence` are supported; others
   will log a warning and no-op.
+- config validation runs at load time; any structural errors are printed and the
+  process exits with a non-zero status (see exit statuses section).
+
+### logging format
+
+- each fetched url is logged on one line: `TYPE  STATUS URL`
+- `TYPE` is fixed-width (e.g., `web`, `confl`).
+- `STATUS` is the numeric http status (or `0` if the request failed before a response).
+- this stable format is designed for easy parsing / piping.
+
+### exit statuses
+
+- currently defined (subject to expansion):
+  - `2`: configuration invalid (schema violation or missing required keys).
 
 ### security / git hygiene
 
