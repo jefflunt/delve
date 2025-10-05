@@ -1,6 +1,7 @@
 require_relative 'html/fetcher'
 require_relative 'confluence/fetcher'
 require_relative 'config'
+require_relative 'fetch_result'
 
 module Delve
   class Fetcher
@@ -11,10 +12,10 @@ module Delve
       if config[uri.host]
         confluence_fetcher = Confluence::Fetcher.new(url, Delve::Config.confluence_config)
         content, links, status = confluence_fetcher.content_and_links
-        [content, links, status, 'confl']
+        FetchResult.new(url: url, content: content, links: links, status: status, type: 'confl')
       else
         body, status = Html::Fetcher.fetch(url)
-        [body, nil, status, 'web'] # links nil so spider extracts
+        FetchResult.new(url: url, content: body, links: [], status: status, type: 'web')
       end
     end
 

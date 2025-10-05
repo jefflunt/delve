@@ -1,4 +1,5 @@
 require_relative 'fetcher'
+require_relative 'fetch_logger'
 require_relative 'html/cleaner'
 require_relative 'saver'
 require 'set'
@@ -23,20 +24,18 @@ module Delve
         url, current_depth = @queue.pop
         next if current_depth > @depth
 
-        content, links, status, type = Delve::Fetcher.fetch(url)
+        result = Delve::Fetcher.fetch(url)
 
-        type_field = type.ljust(5)
-        status_field = format('%3d', status || 0)
-        puts "#{type_field} #{status_field} #{url}"
+        Delve::FetchLogger.log(result)
 
-        next unless content
+        next unless result.content
 
-        cleaner = Delve::Html::Cleaner.new(content, url)
+        cleaner = Delve::Html::Cleaner.new(result.content, url)
         saver = Delve::Saver.new(cleaner.markdown, url)
         saver.save
 
         if current_depth < @depth
-          links ||= cleaner.links
+          links = (result.links && !result.links.empty?) ? result.links : cleaner.links
           links.each do |link|
             next if @visited.include?(link)
             next unless _allow_link?(link)
