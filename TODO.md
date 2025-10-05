@@ -14,3 +14,17 @@ T002 enhance confluence fetcher for full page fidelity
 | add content length + chosen representation to log output
 | add optional pretty_raw formatting (newline after block tags) controlled by config flag
 | fallback: if export_view length < 70% of storage length use storage
+
+T003 make `delve crawl` raw-only (unify with prior transform)
+- remove `transform` command from CLI
+- update spider to remove markdown conversion branch
+- delete obsolete markdown conversion classes (html adapter converter, publisher pieces)
+- ensure crawl outputs raw file paths like previous transform
+- verify `bin/delve crawl https://jefflunt.com` exit 0
+- update README removing transform references
+
+T004 update crawl-domain and crawl-path to raw-only
+- update commands to use unified raw behavior
+- retain domain/path filtering logic
+- ensure logging lists raw file paths
+- verify sample runs exit 0
