@@ -34,7 +34,7 @@ module Delve
         if result.type == 'confl'
           raw_saver = Delve::Saver.new(result.content, url, 'content_raw')
           raw_saver.save
-          puts "RAW  saved #{raw_saver.file_path}" if @mode == :transform
+          puts "          #{raw_saver.file_path}" if @mode == :transform
 
           unless @mode == :transform
             converted = ReverseMarkdown.convert(result.content)
@@ -59,7 +59,7 @@ module Delve
           if @mode == :transform
             raw_saver = Delve::Saver.new(result.content, url, 'content_raw')
             raw_saver.save
-            puts "RAW  saved #{raw_saver.file_path}"
+            puts "          #{raw_saver.file_path}"
             placeholder = Delve::Saver.new("", url)
             placeholder.save
           else
