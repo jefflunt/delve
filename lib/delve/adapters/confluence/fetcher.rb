@@ -1,4 +1,5 @@
 require_relative 'client'
+require 'nokogiri'
 
 module Delve
   module Confluence
@@ -15,7 +16,12 @@ module Delve
         return FetchResult.new(url: @uri.to_s, content: nil, links: [], status: 0, type: 'confl') unless page_id
 
         content, status = _fetch_content(page_id)
-        links = status == 200 ? _fetch_child_links(page_id) : []
+        links = []
+        if status == 200 && content
+          links.concat(_fetch_child_links(page_id))
+          links.concat(_extract_inline_links(content))
+          links.uniq!
+        end
         FetchResult.new(url: @uri.to_s, content: content, links: links, status: status, type: 'confl')
       end
 
@@ -43,8 +49,31 @@ module Delve
         return [] unless response && response['results']
 
         response['results'].map do |page|
-          "https://#{@uri.host}#{@uri.path.gsub(/\/pages\/\d+/, "/pages/#{page['id']}")}"
+          "https://#{@uri.host}#{@uri.path.gsub(/\/pages\/\d+/, "/pages/#{page['id']}")}" 
         end
+      end
+
+      def _extract_inline_links(html)
+        doc = Nokogiri::HTML(html)
+        base = "https://#{@uri.host}"
+        links = []
+
+        # standard anchor tags
+        doc.css('a[href]').each do |a|
+          href = a['href']
+          next if href.nil? || href.empty?
+          begin
+            uri = URI.parse(href)
+            if uri.relative?
+              uri = URI.join(base, href)
+            end
+            links << uri.to_s if uri.host == @uri.host
+          rescue URI::InvalidURIError
+            next
+          end
+        end
+
+        links
       end
     end
   end
