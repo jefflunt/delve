@@ -4,9 +4,15 @@ module Delve
   class Config
     def self.load
       @config ||= begin
-        path = File.expand_path('../config/delve.yml', __dir__)
-        File.exist?(path) ? YAML.load_file(path) : {}
-      end
+                    path = File.expand_path('../../config/delve.yml', __dir__)
+                    if File.exist?(path)
+                      puts "config found at `#{path}'"
+                      YAML.load_file(path)
+                    else
+                      puts "config NOT found"
+                      {}
+                    end
+                  end
     end
 
     def self.reload!

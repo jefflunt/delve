@@ -1,5 +1,6 @@
 require 'faraday'
 require 'json'
+require 'uri'
 
 module Delve
   module Confluence
@@ -11,7 +12,9 @@ module Delve
       end
 
       def get(path, params = {})
-        response = connection.get(path, params)
+        response = connection.get(path, params) do |req|
+          _debug_request('GET', path, params, req.headers)
+        end
         JSON.parse(response.body) if response.success?
       end
 
@@ -19,6 +22,7 @@ module Delve
         response = connection.post(path) do |req|
           req.headers['Content-Type'] = 'application/json'
           req.body = body.to_json
+          _debug_request('POST', path, nil, req.headers)
         end
         JSON.parse(response.body) if response.success?
       end
@@ -26,7 +30,8 @@ module Delve
       def put(path, body)
         response = connection.put(path) do |req|
           req.headers['Content-Type'] = 'application/json'
-          req.body = body.to_json
+            req.body = body.to_json
+          _debug_request('PUT', path, nil, req.headers)
         end
         JSON.parse(response.body) if response.success?
       end
@@ -72,7 +77,29 @@ module Delve
       def connection
         @connection ||= Faraday.new(url: "https://#{@host}") do |faraday|
           faraday.request :authorization, :basic, @username, @api_token
+          faraday.headers['Accept'] = 'application/json'
           faraday.adapter Faraday.default_adapter
+        end
+      end
+
+      def _debug_request(verb, path, params, headers)
+        query = params && !params.empty? ? "?#{URI.encode_www_form(params)}" : ''
+        full = "https://#{@host}#{path}#{query}"
+        sanitized = _sanitize_headers(headers)
+        puts "[delve confluence debug] #{verb} #{full}\n  headers: #{sanitized.inspect}"
+      rescue => e
+        warn "debug logging failed: #{e.message}"
+      end
+
+      def _sanitize_headers(headers)
+        return {} unless headers
+        headers.each_with_object({}) do |(k, v), acc|
+          if k.downcase == 'authorization' && v&.start_with?('Basic ')
+            token = v.split(' ', 2)[1]
+            acc[k] = "Basic #{token[0,8]}..." # truncate for safety
+          else
+            acc[k] = v
+          end
         end
       end
     end
