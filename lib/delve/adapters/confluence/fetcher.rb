@@ -29,8 +29,6 @@ module Delve
         if content && @config['pretty_raw'] && @config['pretty_raw'] =~ /^(1|true|yes|on)$/i
           content = content.gsub(/<(\/)?(p|div|h[1-6]|ul|ol|li|table|thead|tbody|tr|td|th|pre|blockquote)>/i) { |m| "#{m}\n" }
         end
-        # log representation and length for diagnostics
-        puts ("confl  rep=#{rep} len=#{content ? content.bytesize : 0} attach=#{attachments.length} #{@uri}") if content
         FetchResult.new(url: @uri.to_s, content: content, links: links, status: status, type: 'confl', attachments: attachments)
       end
 
