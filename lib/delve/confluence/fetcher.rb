@@ -12,12 +12,12 @@ module Delve
 
       def content_and_links
         page_id = _extract_page_id
-        return [nil, []] unless page_id
+        return [nil, [], 0] unless page_id
 
-        content = _fetch_content(page_id)
-        links = _fetch_child_links(page_id)
+        content, status = _fetch_content(page_id)
+        links = status == 200 ? _fetch_child_links(page_id) : []
 
-        [content, links]
+        [content, links, status]
       end
 
       private
@@ -32,7 +32,11 @@ module Delve
       def _fetch_content(page_id)
         # 'body.storage.value' gives us the raw HTML content of the page
         response = @client.get("/wiki/rest/api/content/#{page_id}", expand: 'body.storage')
-        response['body']['storage']['value'] if response
+        if response
+          [response['body']['storage']['value'], @client.last_status]
+        else
+          [nil, @client.last_status || 0]
+        end
       end
 
       def _fetch_child_links(page_id)

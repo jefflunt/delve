@@ -10,10 +10,11 @@ module Delve
 
       if config[uri.host]
         confluence_fetcher = Confluence::Fetcher.new(url, Delve::Config.confluence_config)
-        confluence_fetcher.content_and_links
+        content, links, status = confluence_fetcher.content_and_links
+        [content, links, status, 'confl']
       else
-        html = Html::Fetcher.fetch(url)
-        [html, nil] # Return nil for links, as the crawler will extract them
+        body, status = Html::Fetcher.fetch(url)
+        [body, nil, status, 'web'] # links nil so spider extracts
       end
     end
 

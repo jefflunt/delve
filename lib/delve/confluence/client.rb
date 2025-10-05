@@ -5,6 +5,8 @@ require 'base64'
 module Delve
   module Confluence
     class Client
+      attr_reader :last_status
+
       def initialize(host, username, api_token)
         @host = host
         @username = username.strip
@@ -13,6 +15,7 @@ module Delve
 
       def get(path, params = {})
         response = connection.get(path, params)
+        @last_status = response.status
         JSON.parse(response.body) if response.success?
       end
 
@@ -21,6 +24,7 @@ module Delve
           req.headers['Content-Type'] = 'application/json'
           req.body = body.to_json
         end
+        @last_status = response.status
         JSON.parse(response.body) if response.success?
       end
 
@@ -29,6 +33,7 @@ module Delve
           req.headers['Content-Type'] = 'application/json'
           req.body = body.to_json
         end
+        @last_status = response.status
         JSON.parse(response.body) if response.success?
       end
 

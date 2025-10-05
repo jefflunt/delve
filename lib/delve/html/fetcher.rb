@@ -6,10 +6,11 @@ module Delve
     class Fetcher
     def self.fetch(url)
       response = _faraday.get(url)
-      response.body if response.success?
+      body = response.body if response.success?
+      [body, response.status]
     rescue Faraday::Error => e
       warn "error fetching #{url}: #{e.message}"
-      nil
+      [nil, 0]
     end
 
     def self._faraday

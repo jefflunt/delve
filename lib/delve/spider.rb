@@ -23,14 +23,17 @@ module Delve
         url, current_depth = @queue.pop
         next if current_depth > @depth
 
-        content, links = Delve::Fetcher.fetch(url)
+        content, links, status, type = Delve::Fetcher.fetch(url)
+
+        type_field = type.ljust(5)
+        status_field = format('%3d', status || 0)
+        puts "#{type_field} #{status_field} #{url}"
+
         next unless content
 
         cleaner = Delve::Html::Cleaner.new(content, url)
         saver = Delve::Saver.new(cleaner.markdown, url)
         saver.save
-
-        puts "saved #{url}"
 
         if current_depth < @depth
           links ||= cleaner.links
