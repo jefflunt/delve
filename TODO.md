@@ -16,9 +16,9 @@ T002 enhance confluence fetcher for full page fidelity
 | fallback: if export_view length < 70% of storage length use storage
 
 T003 make `delve crawl` raw-only (unify with prior transform)
-- remove `transform` command from CLI
-- update spider to remove markdown conversion branch
-- delete obsolete markdown conversion classes (html adapter converter, publisher pieces)
+| remove `transform` command from CLI
+| update spider to remove markdown conversion branch
+| delete obsolete markdown conversion classes (html adapter converter, publisher pieces)
 - ensure crawl outputs raw file paths like previous transform
 - verify `bin/delve crawl https://jefflunt.com` exit 0
 - update README removing transform references

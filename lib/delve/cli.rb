@@ -25,11 +25,6 @@ module Delve
       crawler.crawl
     end
 
-    desc "transform <url> [depth]", "fetch raw content only for LLM markdown generation"
-    def transform(url, depth = 2)
-      crawler = Delve::Spider.new(url, depth.to_i, :all, :transform)
-      crawler.crawl
-    end
 
     desc "crawl-domain <url> [depth]", "crawl a url within its domain"
     def crawl_domain(url, depth = 2)
