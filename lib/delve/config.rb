@@ -45,45 +45,51 @@ module Delve
     end
 
     def self._validate!(data)
-      # required top-level keys
+      require_relative 'exit_status'
+
+      error_messages = []
+
       missing = REQUIRED_TOP_LEVEL.reject { |k| data.key?(k) }
-      raise "config missing required keys: #{missing.join(', ')}" unless missing.empty?
+      error_messages << "config missing required keys: #{missing.join(', ')}" unless missing.empty?
 
-      # unknown top-level keys
       unknown_top = data.keys - SCHEMA.keys
-      raise "config has unknown top-level keys: #{unknown_top.join(', ')}" unless unknown_top.empty?
+      error_messages << "config has unknown top-level keys: #{unknown_top.join(', ')}" unless unknown_top.empty?
 
-      # confluence structure
-      conf = data['confluence']
-      unless conf.is_a?(Hash)
-        raise 'config key confluence must be a mapping of host -> settings'
-      end
+      if data.key?('confluence')
+        conf = data['confluence']
+        unless conf.is_a?(Hash)
+          error_messages << 'config key confluence must be a mapping of host -> settings'
+        else
+          conf.each do |host, host_cfg|
+            unless host_cfg.is_a?(Hash)
+              error_messages << "confluence host #{host} must map to a hash of settings"
+              next
+            end
 
-      conf.each do |host, host_cfg|
-        unless host_cfg.is_a?(Hash)
-          raise "confluence host #{host} must map to a hash of settings"
-        end
+            host_missing = REQUIRED_CONFLUENCE_KEYS.reject { |k| host_cfg.key?(k) }
+            unless host_missing.empty?
+              error_messages << "confluence host #{host} missing required keys: #{host_missing.join(', ')}"
+            end
 
-        # required host keys
-        host_missing = REQUIRED_CONFLUENCE_KEYS.reject { |k| host_cfg.key?(k) }
-        unless host_missing.empty?
-          raise "confluence host #{host} missing required keys: #{host_missing.join(', ')}"
-        end
+            unknown = host_cfg.keys - CONFLUENCE_HOST_SCHEMA.keys
+            unless unknown.empty?
+              error_messages << "confluence host #{host} has unknown keys: #{unknown.join(', ')}"
+            end
 
-        # unknown host keys
-        unknown = host_cfg.keys - CONFLUENCE_HOST_SCHEMA.keys
-        unless unknown.empty?
-          raise "confluence host #{host} has unknown keys: #{unknown.join(', ')}"
-        end
-
-        # simple type checks (non-empty string)
-        CONFLUENCE_HOST_SCHEMA.each do |k, _|
-          next unless host_cfg.key?(k)
-          v = host_cfg[k]
-          unless v.is_a?(String) && !v.strip.empty?
-            raise "confluence host #{host} key #{k} must be a non-empty string"
+            CONFLUENCE_HOST_SCHEMA.each do |k, _|
+              next unless host_cfg.key?(k)
+              v = host_cfg[k]
+              unless v.is_a?(String) && !v.strip.empty?
+                error_messages << "confluence host #{host} key #{k} must be a non-empty string"
+              end
+            end
           end
         end
+      end
+
+      unless error_messages.empty?
+        error_messages.each { |m| warn m }
+        exit Delve::ExitStatus::CONFIG_INVALID
       end
     end
   end
