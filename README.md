@@ -55,20 +55,24 @@ delve/
 │   └── delve
 └── lib/
     └── delve
-        ├── cli.rb                  # the main program, effectively
+        ├── cli.rb                  # main program
         ├── spider.rb               # unified crawler with filter modes
         ├── saver.rb
-        ├── fetcher.rb              # dispatcher: decides html vs confluence
-        ├── publisher.rb            # dispatcher: decides confluence vs noop
-        ├── config.rb               # centralized config loader/helpers
-        ├── confluence/
-        │   ├── client.rb
-        │   ├── fetcher.rb
-        │   ├── markdown_converter.rb
-        │   └── publisher.rb
-        ├── html/                   # html processing tools
-        │   ├── fetcher.rb
-        │   └── cleaner.rb
+        ├── fetcher.rb              # dispatcher: decides adapter (html vs confluence)
+        ├── publisher.rb            # dispatcher: decides adapter publisher vs noop
+        ├── config.rb               # config loader/helpers + validation
+        ├── fetch_result.rb         # FetchResult struct
+        ├── fetch_logger.rb         # centralized logging
+        ├── exit_status.rb          # exit status constants
+        └── adapters/
+            ├── confluence/
+            │   ├── client.rb
+            │   ├── fetcher.rb
+            │   ├── markdown_converter.rb
+            │   └── publisher.rb
+            └── html/
+                ├── fetcher.rb
+                └── cleaner.rb
 ```
 
 ## for developers
