@@ -1,7 +1,7 @@
 require 'thor'
 require_relative 'spider'
 
-require_relative 'confluence/publisher'
+require_relative 'adapters/confluence/publisher'
 require_relative 'publisher'
 
 module Delve

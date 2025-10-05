@@ -1,6 +1,6 @@
 require_relative 'fetcher'
 require_relative 'fetch_logger'
-require_relative 'html/cleaner'
+require_relative 'adapters/html/cleaner'
 require_relative 'saver'
 require 'set'
 require 'uri'

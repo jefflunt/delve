@@ -1,4 +1,4 @@
-require_relative 'confluence/publisher'
+require_relative 'adapters/confluence/publisher'
 require_relative 'config'
 
 module Delve

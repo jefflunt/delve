@@ -1,5 +1,5 @@
-require_relative 'html/fetcher'
-require_relative 'confluence/fetcher'
+require_relative 'adapters/html/fetcher'
+require_relative 'adapters/confluence/fetcher'
 require_relative 'config'
 require_relative 'fetch_result'
 
