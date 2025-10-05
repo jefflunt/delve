@@ -34,8 +34,22 @@ module Delve
           # save raw rendered html for debugging
           raw_saver = Delve::Saver.new(result.content, url, 'content_raw')
           raw_saver.save
+
           # basic conversion: reverse_markdown on the rendered html
           converted = ReverseMarkdown.convert(result.content)
+
+            # fallback: if conversion produced no urls but raw html had anchors, append them
+          if !converted.include?('http')
+            anchors = _extract_confluence_links(result.content)
+            unless anchors.empty?
+              converted << "\n\nlinks:\n"
+              anchors.each do |text, href|
+                label = text.strip.empty? ? href : text.strip
+                converted << "- [#{label}](#{href})\n"
+              end
+            end
+          end
+
           saver = Delve::Saver.new(converted, url)
           saver.save
         else
@@ -99,6 +113,14 @@ module Delve
         .join('.')
     rescue URI::InvalidURIError
       nil
+    end
+
+    def _extract_confluence_links(html)
+      require 'nokogiri'
+      doc = Nokogiri::HTML(html)
+      doc.css('a[href]').map do |a|
+        [a.text || '', a['href']]
+      end.select { |(_, href)| href && href.start_with?('http') }
     end
   end
 end
