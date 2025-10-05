@@ -26,7 +26,7 @@ template:
 
 examples:
   delve publish https://wiki.confluence.com example/docs public/docs
-                ^confluence host            ^local folder of mardown files
+                ^confluence host            ^local folder of markdown files
                                                          ^confluence space
                                                                 ^confluence parent page
 ```
@@ -40,8 +40,8 @@ directions.
 
 - **language:** `ruby`
 - **http client:** `faraday`
-- **html parsing & cleaning:** `nokogiri`
-- **content extraction:** (previous readability + conversion removed; raw html preserved)
+- **html parsing:** `nokogiri`
+- **content handling:** raw html persisted (no built-in html→markdown conversion; external/LLM expected)
 - **cli framework:** `thor`
 
 ## project structure
@@ -66,11 +66,10 @@ delve/
             ├── confluence/
             │   ├── client.rb
             │   ├── fetcher.rb
-            │   ├── markdown_converter.rb
+            │   ├── markdown_converter.rb  # used only by publisher
             │   └── publisher.rb
             └── html/
-                ├── fetcher.rb
-                └── cleaner.rb
+                └── fetcher.rb
 ```
 
 ## for developers
@@ -103,7 +102,7 @@ extensible. the main components interact in the following sequence:
 - **spider:** manages the queue of urls to visit and orchestrates fetching and saving raw content for each url.
 - **fetcher (dispatcher):** selects adapter: generic web vs confluence.
 - **saver:** writes raw html under `content_raw/` plus an empty placeholder `.md` under `content/` for later LLM conversion.
-- **publisher:** dispatches publishing to confluence (if configured) or no-ops.
+- **publisher:** converts local markdown (via kramdown) and publishes to confluence (if configured) or no-ops.
 - **config:** central place for loading and querying configuration.
 - **fetch result + logger:** fetch operations return a lightweight `FetchResult`
   struct (url, content, links, status, type, error). logging is centralized so
