@@ -90,11 +90,11 @@ extensible. the main components interact in the following sequence:
            v                                                     |
          [ Html::Fetcher ]                                       |
            |                                                     |
-            v                                                     |
-          (raw html saved) <---------------------------------------+
+           v                                                     |
+         (raw html saved) <--------------------------------------+
             |
             v
-          [ Saver (raw + placeholder) ]
+         [ Saver (raw + placeholder) ]
 ```
 
 - **cli:** the entry point. it parses user arguments and instantiates the
