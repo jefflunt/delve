@@ -5,7 +5,8 @@ module Delve
     class Fetcher
       def initialize(url, config)
         @uri = URI.parse(url)
-        @config = config[uri.host]
+        @config = config[@uri.host]
+        raise "no confluence config for #{@uri.host}" unless @config
         @client = Client.new(@uri.host, @config['username'], @config['api_token'])
       end
 

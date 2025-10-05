@@ -133,7 +133,7 @@ confluence:
     crawl or publish to (e.g., `your-instance.atlassian.net`).
   - `username`: the confluence/cloud email login.
   - `api_token`: an api token generated from your atlassian account.
-  - `space_key`: the target space key used when publishing pages.
+  - `space_key`: the target space key used when publishing pages (not required just to crawl/read).
 
 ### behavior
 
@@ -143,5 +143,8 @@ confluence:
 - when publishing: only hosts present under `confluence` are supported; others
   will log a warning and no-op.
 
-**NOTE:** `config/delve.yml` is ignored by git (see `.gitignore`) in order to
-avoid credentials being added to source control.
+### security / git hygiene
+
+- `config/delve.yml` is ignored by git (see `.gitignore`). keep credentials out of source control.
+- use the provided `config/delve.yml.example` as a template for collaborators.
+
