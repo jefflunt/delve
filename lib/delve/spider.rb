@@ -30,9 +30,19 @@ module Delve
 
         next unless result.content
 
-        cleaner = Delve::Html::Cleaner.new(result.content, url)
-        saver = Delve::Saver.new(cleaner.markdown, url)
-        saver.save
+        if result.type == 'confl'
+          # save raw rendered html for debugging
+          raw_saver = Delve::Saver.new(result.content, url, 'content_raw')
+          raw_saver.save
+          # basic conversion: reverse_markdown on the rendered html
+          converted = ReverseMarkdown.convert(result.content)
+          saver = Delve::Saver.new(converted, url)
+          saver.save
+        else
+          cleaner = Delve::Html::Cleaner.new(result.content, url)
+          saver = Delve::Saver.new(cleaner.markdown, url)
+          saver.save
+        end
 
         if current_depth < @depth
           links = (result.links && !result.links.empty?) ? result.links : cleaner.links

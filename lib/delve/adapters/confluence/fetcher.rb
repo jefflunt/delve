@@ -27,9 +27,12 @@ module Delve
       end
 
       def _fetch_content(page_id)
-        response = @client.get("/wiki/rest/api/content/#{page_id}", expand: 'body.storage')
-        if response
-          [response['body']['storage']['value'], @client.last_status]
+        response = @client.get("/wiki/rest/api/content/#{page_id}", expand: 'body.export_view')
+        if response && response['body'] && response['body']['export_view']
+          [response['body']['export_view']['value'], @client.last_status]
+        elsif response && response['body'] && response['body']['storage']
+          # fallback: some older instances may not support export_view
+            [response['body']['storage']['value'], @client.last_status]
         else
           [nil, @client.last_status || 0]
         end
