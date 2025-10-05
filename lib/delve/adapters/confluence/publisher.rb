@@ -1,6 +1,6 @@
 require_relative 'client'
 require_relative 'markdown_converter'
-require_relative '../config'
+require_relative '../../config'
 
 module Delve
   module Confluence
