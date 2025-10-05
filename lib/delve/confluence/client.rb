@@ -1,20 +1,21 @@
 require 'faraday'
 require 'json'
 require 'uri'
+require 'base64'
+require 'erb'
 
 module Delve
   module Confluence
     class Client
       def initialize(host, username, api_token)
         @host = host
-        @username = username
-        @api_token = api_token
+        @username = username.strip
+        @api_token = api_token.strip
       end
 
       def get(path, params = {})
-        response = connection.get(path, params) do |req|
-          _debug_request('GET', path, params, req.headers)
-        end
+        response = connection.get(path, params)
+        _debug_request('GET', path, params, response)&.dig(:json)
         JSON.parse(response.body) if response.success?
       end
 
@@ -22,17 +23,17 @@ module Delve
         response = connection.post(path) do |req|
           req.headers['Content-Type'] = 'application/json'
           req.body = body.to_json
-          _debug_request('POST', path, nil, req.headers)
         end
+        _debug_request('POST', path, nil, response)
         JSON.parse(response.body) if response.success?
       end
 
       def put(path, body)
         response = connection.put(path) do |req|
           req.headers['Content-Type'] = 'application/json'
-            req.body = body.to_json
-          _debug_request('PUT', path, nil, req.headers)
+          req.body = body.to_json
         end
+        _debug_request('PUT', path, nil, response)
         JSON.parse(response.body) if response.success?
       end
 
@@ -76,17 +77,27 @@ module Delve
 
       def connection
         @connection ||= Faraday.new(url: "https://#{@host}") do |faraday|
-          faraday.request :authorization, :basic, @username, @api_token
+          faraday.headers['Authorization'] = _auth_header
           faraday.headers['Accept'] = 'application/json'
           faraday.adapter Faraday.default_adapter
         end
       end
 
-      def _debug_request(verb, path, params, headers)
+      def _auth_header
+        "Basic #{Base64.encode64("#{@username}:#{@api_token}")}".gsub("\n", '').strip
+      end
+
+      def _debug_request(verb, path, params, response_or_headers)
         query = params && !params.empty? ? "?#{URI.encode_www_form(params)}" : ''
         full = "https://#{@host}#{path}#{query}"
+        headers = if response_or_headers.respond_to?(:headers)
+                    response_or_headers.headers
+                  else
+                    response_or_headers
+                  end
         sanitized = _sanitize_headers(headers)
-        puts "[delve confluence debug] #{verb} #{full}\n  headers: #{sanitized.inspect}"
+        status = response_or_headers.respond_to?(:status) ? response_or_headers.status : 'n/a'
+        puts "[delve confluence debug] #{verb} #{full} (status #{status})\n  headers: #{sanitized.inspect}"
       rescue => e
         warn "debug logging failed: #{e.message}"
       end

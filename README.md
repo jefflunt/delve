@@ -135,6 +135,18 @@ confluence:
   - `api_token`: an api token generated from your atlassian account.
   - `space_key`: the target space key used when publishing pages (not required just to crawl/read).
 
+### erb support
+
+- the config file is processed through ERB before yaml parsing.
+- you can embed dynamic values, e.g.:
+  ```yaml
+  confluence:
+    <%= ENV['CONF_HOST'] %>:
+      username: <%= ENV['CONF_USER'].inspect %>
+      api_token: <%= ENV['CONF_TOKEN'].inspect %>
+  ```
+- avoid executing arbitrary code; only simple substitutions are recommended.
+
 ### behavior
 
 - if the file does not exist, confluence functionality is skipped gracefully.

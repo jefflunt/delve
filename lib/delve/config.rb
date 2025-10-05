@@ -7,7 +7,9 @@ module Delve
                     path = File.expand_path('../../config/delve.yml', __dir__)
                     if File.exist?(path)
                       puts "config found at `#{path}'"
-                      YAML.load_file(path)
+                      raw = File.read(path)
+                       erb = ERB.new(raw).result
+                       YAML.safe_load(erb, permitted_classes: [], permitted_symbols: [], aliases: false)
                     else
                       puts "config NOT found"
                       {}
