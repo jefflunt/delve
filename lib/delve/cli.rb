@@ -42,5 +42,12 @@ module Delve
       publisher = Delve::Publisher.new(host, directory, root_page_id)
       publisher.publish
     end
+
+    desc "config-validate", "validate config/delve.yml and report errors"
+    def config_validate
+      require_relative 'config'
+      Delve::Config.reload!
+      puts 'config valid'
+    end
   end
 end
