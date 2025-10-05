@@ -10,12 +10,9 @@ module Delve
       uri = URI.parse(url)
 
       if config[uri.host]
-        confluence_fetcher = Confluence::Fetcher.new(url, Delve::Config.confluence_config)
-        content, links, status = confluence_fetcher.content_and_links
-        FetchResult.new(url: url, content: content, links: links, status: status, type: 'confl')
+        Confluence::Fetcher.new(url, Delve::Config.confluence_config).fetch_result
       else
-        body, status = Html::Fetcher.fetch(url)
-        FetchResult.new(url: url, content: body, links: [], status: status, type: 'web')
+        Html::Fetcher.fetch(url)
       end
     end
 
