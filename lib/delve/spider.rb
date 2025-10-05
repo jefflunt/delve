@@ -45,7 +45,15 @@ module Delve
         end
 
         if current_depth < @depth
-          links = (result.links && !result.links.empty?) ? result.links : cleaner.links
+          # prefer adapter-provided links; fall back to cleaner links for generic html
+          links = if result.links && !result.links.empty?
+                    result.links
+                  elsif result.type != 'confl'
+                    # only defined in the non-confluence branch
+                    cleaner.links
+                  else
+                    []
+                  end
           links.each do |link|
             next if @visited.include?(link)
             next unless _allow_link?(link)
