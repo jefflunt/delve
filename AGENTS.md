@@ -1,6 +1,6 @@
 # agent conventions
 
-this document outlines the coding and documentation conventions for the `soak`
+this document outlines the coding and documentation conventions for the `delve`
 project. as an agent working on this codebase, please adhere to these
 guidelines.
 
